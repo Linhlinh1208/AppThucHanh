@@ -39,3 +39,19 @@ export const formatDayLabel = (dateStr, index) => {
   const parts = dateStr.split('-');
   return `${parts[2]}/${parts[1]}`;
 };
+
+export const getWeatherBackground = (code) => {
+  if (code === 0 || code === 1) {
+    return require('../assets/images/nang.jpg');
+  }
+  if ([2, 3, 45, 48].includes(code)) {
+    return require('../assets/images/may.jpg');
+  }
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+    return require('../assets/images/mua.jpg');
+  }
+  if (code >= 95) {
+    return require('../assets/images/bao.jpg');
+  }
+  return require('../assets/images/may.jpg');
+};

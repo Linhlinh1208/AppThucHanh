@@ -11,10 +11,16 @@ export const requestLocationPermission = async () => {
     }
 
     if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
+      // Android 12+ yêu cầu xin cả FINE và COARSE cùng lúc
+      const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+      ]);
+
+      return (
+        granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED ||
+        granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
       );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
     }
   } catch (err) {
     console.warn('Lỗi xin quyền vị trí:', err);
@@ -25,15 +31,16 @@ export const requestLocationPermission = async () => {
 
 export const getCurrentCoordinates = () => {
   return new Promise((resolve) => {
-    // Tự ngắt sau 4 giây nếu GPS máy ảo bị đơ -> tự động nhảy về toạ độ mặc định
+    // Tăng thời gian chờ lên 10 giây để máy thật kịp bắt GPS
     const fallbackTimer = setTimeout(() => {
-      console.log('GPS quá lâu, tự động dùng toạ độ mặc định.');
+      console.log('GPS timeout -> dùng toạ độ mặc định');
       resolve({ ...DEFAULT_COORDS, isDefault: true });
-    }, 4000);
+    }, 10000);
 
     Geolocation.getCurrentPosition(
       (position) => {
         clearTimeout(fallbackTimer);
+        console.log('Lấy GPS thành công:', position.coords);
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -42,15 +49,15 @@ export const getCurrentCoordinates = () => {
       },
       (error) => {
         clearTimeout(fallbackTimer);
-        console.warn('Không lấy được toạ độ GPS:', error.code, error.message);
+        console.warn('Lỗi GPS máy thật:', error.code, error.message);
         resolve({ ...DEFAULT_COORDS, isDefault: true });
       },
       {
-        enableHighAccuracy: false, // QUAN TRỌNG: để false để tránh treo GPS trên máy ảo/Android
-        timeout: 5000,
+        enableHighAccuracy: true, // Bật true để máy thật kích hoạt chip GPS vệ tinh
+        timeout: 10000,
         maximumAge: 10000,
         forceRequestLocation: true,
-        showLocationDialog: true,
+        showLocationDialog: true, // Tự hiện popup nhắc người dùng bật GPS nếu đang tắt
       }
     );
   });
