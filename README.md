@@ -82,17 +82,3 @@ cd ios && pod install && cd ..
    npx react-native run-android
    
    ```
-
-## 4. Lệnh xuất file APK nộp bài
-
-Tại thư mục gốc dự án, thực hiện:
-
-```
-cd android
-./gradlew assembleDebug
-# Trên Windows PowerShell: .\gradlew assembleDebug
-
-```
-
-Đường dẫn file APK hoàn chỉnh:
-`android/app/build/outputs/apk/debug/app-debug.apk`
